@@ -17,6 +17,7 @@ class ExperimentBuilder(object):
         :param model: A meta learning system instance
         :param device: Device/s to use for the experiment
         """
+
         self.args, self.device = args, device
 
         self.model = model
@@ -55,7 +56,6 @@ class ExperimentBuilder(object):
             self.start_epoch = int(self.state['current_iter'] / self.args.total_iter_per_epoch)
 
         self.data = data(args=args, current_iter=self.state['current_iter'])
-
         print("train_seed {}, val_seed: {}, at start time".format(self.data.dataset.seed["train"],
                                                                   self.data.dataset.seed["val"]))
         self.total_epochs_before_pause = self.args.total_epochs_before_pause
@@ -312,12 +312,15 @@ class ExperimentBuilder(object):
                        total=int(self.args.total_iter_per_epoch * self.args.total_epochs)) as pbar_train:
 
             while (self.state['current_iter'] < (self.args.total_epochs * self.args.total_iter_per_epoch)) and (self.args.evaluate_on_test_set_only == False):
-
+                # train_sample[0]: (batch_size, n_ways, n_shots, C,W,H)
+                # seed: (batch_size,)
+                # x_support_set, x_target_set, y_support_set, y_target_set, seed = train_sample
                 for train_sample_idx, train_sample in enumerate(
                         self.data.get_train_batches(total_batches=int(self.args.total_iter_per_epoch *
                                                                       self.args.total_epochs) - self.state[
                                                                       'current_iter'],
                                                     augment_images=self.augment_flag)):
+                    
                     # print(self.state['current_iter'], (self.args.total_epochs * self.args.total_iter_per_epoch))
                     train_losses, total_losses, self.state['current_iter'] = self.train_iteration(
                         train_sample=train_sample,
@@ -327,9 +330,8 @@ class ExperimentBuilder(object):
                         pbar_train=pbar_train,
                         current_iter=self.state['current_iter'],
                         sample_idx=self.state['current_iter'])
-
+                    
                     if self.state['current_iter'] % self.args.total_iter_per_epoch == 0:
-
                         total_losses = dict()
                         val_losses = dict()
                         with tqdm.tqdm(total=int(self.args.num_evaluation_tasks / self.args.batch_size)) as pbar_val:

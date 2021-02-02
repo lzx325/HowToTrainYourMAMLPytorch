@@ -129,12 +129,14 @@ class FewShotLearningDatasetParallel(Dataset):
         self.current_set_name = "train"
         self.num_target_samples = args.num_target_samples
         self.reset_stored_filepaths = args.reset_stored_filepaths
+        # lizx: seed is re-generated here
         val_rng = np.random.RandomState(seed=args.val_seed)
         val_seed = val_rng.randint(1, 999999)
         train_rng = np.random.RandomState(seed=args.train_seed)
         train_seed = train_rng.randint(1, 999999)
         test_rng = np.random.RandomState(seed=args.val_seed)
         test_seed = test_rng.randint(1, 999999)
+        
         args.val_seed = val_seed
         args.train_seed = train_seed
         args.test_seed = test_seed
@@ -520,7 +522,6 @@ class FewShotLearningDatasetParallel(Dataset):
         support_set_labels = y_labels[:, :self.num_samples_per_class]
         target_set_images = x_images[:, self.num_samples_per_class:]
         target_set_labels = y_labels[:, self.num_samples_per_class:]
-
         return support_set_images, target_set_images, support_set_labels, target_set_labels, seed
 
     def __len__(self):
@@ -536,7 +537,7 @@ class FewShotLearningDatasetParallel(Dataset):
 
     def switch_set(self, set_name, current_iter=None):
         self.current_set_name = set_name
-        if set_name == "train":
+        if set_name == "train": # The seed is updated for training set
             self.update_seed(dataset_name=set_name, seed=self.init_seed[set_name] + current_iter)
 
     def update_seed(self, dataset_name, seed=100):

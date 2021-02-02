@@ -44,6 +44,7 @@
   "cnn_num_filters":64,
   "num_stages":4,
   "conv_padding": true,
+  "_comment":"inner loop steps",
   "number_of_training_steps_per_iter":5,
   "number_of_evaluation_steps_per_iter":5,
   "cnn_blocks_per_stage":1,

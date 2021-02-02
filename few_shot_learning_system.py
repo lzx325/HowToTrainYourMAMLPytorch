@@ -19,7 +19,6 @@ def set_torch_seed(seed):
     rng = np.random.RandomState(seed=seed)
     torch_seed = rng.randint(0, 999999)
     torch.manual_seed(seed=torch_seed)
-
     return rng
 
 
@@ -110,7 +109,7 @@ class MAMLFewShotClassifier(nn.Module):
         """
         param_dict = dict()
         for name, param in params:
-            if param.requires_grad:
+            if param.requires_grad: # get all trainable parameters
                 if self.args.enable_inner_loop_optimizable_bn_params:
                     param_dict[name] = param.to(device=self.device)
                 else:
@@ -180,11 +179,15 @@ class MAMLFewShotClassifier(nn.Module):
         :param training_phase: Whether this is a training phase (True) or an evaluation phase (False)
         :return: A dictionary with the collected losses of the current outer forward propagation.
         """
+
         x_support_set, x_target_set, y_support_set, y_target_set = data_batch
 
         [b, ncs, spc] = y_support_set.shape
-
+        # b: batch_size
+        # ncs: n_ways
+        # spc: n_shots
         self.num_classes_per_set = ncs
+        import ipdb; ipdb.set_trace()
 
         total_losses = []
         total_accuracies = []
@@ -197,15 +200,18 @@ class MAMLFewShotClassifier(nn.Module):
                               y_target_set)):
             task_losses = []
             task_accuracies = []
+            # DELVEIN
             per_step_loss_importance_vectors = self.get_per_step_loss_importance_vector()
+
+            # DELVEIN
             names_weights_copy = self.get_inner_loop_parameter_dict(self.classifier.named_parameters())
 
             num_devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
 
             names_weights_copy = {
                 name.replace('module.', ''): value.unsqueeze(0).repeat(
-                    [num_devices] + [1 for i in range(len(value.shape))]) for
-                name, value in names_weights_copy.items()}
+                    [num_devices] + [1 for i in range(len(value.shape))]) 
+                    for name, value in names_weights_copy.items()}
 
             n, s, c, h, w = x_target_set_task.shape
 
@@ -215,14 +221,15 @@ class MAMLFewShotClassifier(nn.Module):
             y_target_set_task = y_target_set_task.view(-1)
 
             for num_step in range(num_steps):
-
+                
+                # lizx: pure layer forward
                 support_loss, support_preds = self.net_forward(x=x_support_set_task,
                                                                y=y_support_set_task,
                                                                weights=names_weights_copy,
                                                                backup_running_statistics=
                                                                True if (num_step == 0) else False,
                                                                training=True, num_step=num_step)
-
+                # DELVEIN
                 names_weights_copy = self.apply_inner_loop_update(loss=support_loss,
                                                                   names_weights_copy=names_weights_copy,
                                                                   use_second_order=use_second_order,

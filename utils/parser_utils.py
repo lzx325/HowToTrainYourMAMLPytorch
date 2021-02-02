@@ -54,6 +54,7 @@ def get_args():
     parser.add_argument('--name_of_args_json_file', type=str, default="None")
 
     args = parser.parse_args()
+
     args_dict = vars(args)
     if args.name_of_args_json_file is not "None":
         args_dict = extract_args_from_json(args.name_of_args_json_file, args_dict)

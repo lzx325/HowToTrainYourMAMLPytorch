@@ -1,0 +1,4 @@
+*.swp
+__pycache__/
+/omniglot_5_8_0.1_64_5_0-prelim_run/
+mini_imagenet_full_size.tar.bz2
